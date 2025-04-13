@@ -1,64 +1,36 @@
 import streamlit as st
+import random
 
-# Conversion dictionaries
-length_units = {
-    'Meters': 1,
-    'Kilometers': 0.001,
-    'Centimeters': 100,
-    'Miles': 0.000621371,
-    'Feet': 3.28084,
-    'Inches': 39.3701
-}
+st.set_page_config(page_title="Number Guessing Game")
 
-weight_units = {
-    'Kilograms': 1,
-    'Grams': 1000,
-    'Pounds': 2.20462,
-    'Ounces': 35.274
-}
+st.title("Number Guessing Game")
+st.write("Guess a number between 1 and 100!")
 
-temperature_units = ['Celsius', 'Fahrenheit', 'Kelvin']
+# Initialize session state variables
+if 'number' not in st.session_state:
+    st.session_state.number = random.randint(1, 100)
+    st.session_state.attempts = 0
+    st.session_state.game_over = False
 
-# Temperature conversion
-def convert_temperature(value, from_unit, to_unit):
-    if from_unit == to_unit:
-        return value
-    # Convert to Celsius first
-    if from_unit == 'Fahrenheit':
-        value = (value - 32) * 5 / 9
-    elif from_unit == 'Kelvin':
-        value = value - 273.15
-    # Convert from Celsius to target
-    if to_unit == 'Fahrenheit':
-        return (value * 9 / 5) + 32
-    elif to_unit == 'Kelvin':
-        return value + 273.15
+# Input from user
+guess = st.number_input("Enter your guess", min_value=1, max_value=100, step=1)
+
+if st.button("Submit Guess"):
+    if st.session_state.game_over:
+        st.warning("Game over! Click 'Restart' to play again.")
     else:
-        return value
+        st.session_state.attempts += 1
+        if guess < st.session_state.number:
+            st.info("Too low! Try again.")
+        elif guess > st.session_state.number:
+            st.info("Too high! Try again.")
+        else:
+            st.success(f"Correct! You guessed it in {st.session_state.attempts} attempts.")
+            st.session_state.game_over = True
 
-# App UI
-st.title("Google-style Unit Converter")
-
-unit_type = st.selectbox("Select conversion type", ["Length", "Weight", "Temperature"])
-
-if unit_type == "Length":
-    units = length_units
-elif unit_type == "Weight":
-    units = weight_units
-elif unit_type == "Temperature":
-    units = temperature_units
-
-from_unit = st.selectbox("From", list(units.keys()) if isinstance(units, dict) else units)
-to_unit = st.selectbox("To", list(units.keys()) if isinstance(units, dict) else units)
-
-value = st.number_input("Enter value to convert", format="%.4f")
-
-# Perform conversion
-if st.button("Convert"):
-    if unit_type == "Temperature":
-        result = convert_temperature(value, from_unit, to_unit)
-    else:
-        base_value = value / units[from_unit]
-        result = base_value * units[to_unit]
-    
-    st.success(f"{value} {from_unit} = {result:.4f} {to_unit}")
+# Restart the game
+if st.button("Restart"):
+    st.session_state.number = random.randint(1, 100)
+    st.session_state.attempts = 0
+    st.session_state.game_over = False
+    st.experimental_rerun()
